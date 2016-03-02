@@ -40,11 +40,12 @@ def load_data_and_labels():
     codes = [s.strip() for s in codes]
     global real_codes
     real_codes = codes
-    d = {}
-    token_codes = [d[i] for i in codes if d.setdefault(i,len(d)+1)]             ##Create one_hot vector
+    global dictionary_of_codes
+    dictionary_of_codes = {}
+    token_codes = [dictionary_of_codes[i] for i in codes if dictionary_of_codes.setdefault(i,len(dictionary_of_codes)+1)]             ##Create one_hot vector
     token_codes_vector = np.eye(196)[token_codes]
     y = token_codes_vector
-    return [x_text, y, real_codes]
+    return [x_text, y, real_codes, dictionary_of_codes]
 
 
 
@@ -121,11 +122,11 @@ def load_data():
     Returns input vectors, labels, vocabulary, and inverse vocabulary.
     """
     # Load and preprocess data
-    sentences, labels, real_codes = load_data_and_labels()                                      ##Actual loading of data
+    sentences, labels, real_codes, dictionary_of_codes = load_data_and_labels()                                      ##Actual loading of data
     sentences_padded = pad_sentences(sentences)                                     ##Runs padding
     vocabulary, vocabulary_inv = build_vocab(sentences_padded)                      ##Builds vocabulary
     x, y = build_input_data(sentences_padded, labels, vocabulary)                   ##Constructs the array
-    return [x, y, vocabulary, vocabulary_inv, real_codes]
+    return [x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
 
 
 def batch_iter(data, batch_size, num_epochs):

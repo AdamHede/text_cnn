@@ -23,7 +23,7 @@ tf.flags.DEFINE_integer("batch_size", 512, "Batch Size (default: 64)")
 tf.flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
 tf.flags.DEFINE_integer("evaluate_every", 1000, "Evaluate model on dev set after this many steps (default: 100)")
 tf.flags.DEFINE_integer("checkpoint_every", 5000, "Save model after this many steps (default: 100)")
-tf.flags.DEFINE_integer("attempt_predictions_every", 10000, "Write these to file")
+tf.flags.DEFINE_integer("attempt_predictions_every", 100, "Write these to file")
 # Misc Parameters
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
 tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
@@ -41,7 +41,7 @@ print("")
 
 # Load data
 print("Loading data...")
-x, y, vocabulary, vocabulary_inv, real_codes = data_helpers.load_data()
+x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes = data_helpers.load_data()
 # Randomly shuffle data
 np.random.seed(10)
 shuffle_indices = np.random.permutation(np.arange(len(y)))
@@ -170,9 +170,9 @@ with tf.Graph().as_default():
                 feed_dict)
             time_str = datetime.datetime.now().isoformat()
             classification = sess.run(cnn.predictions, feed_dict)
-            print classification
-            ##true_codes = vocabulary
-            file_out = zip(real_codes, classification)
+            for prediction in classification:
+                predicted_codes = dictionary_of_codes[prediction]
+            file_out = zip(real_codes, predicted_codes)
             data_helpers.write_predictions(file_out)
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:
