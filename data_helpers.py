@@ -7,7 +7,7 @@ import csv
 def write_predictions(output):
     with open("predictions.csv", 'w') as f:
         writer = csv.writer(f)                  ##Somehow remove linebreaks?! Split array up?
-        writer.writerows(output[:1000])
+        writer.writerows(output)
 
 def clean_str(string):
     """
@@ -41,8 +41,9 @@ def load_data_and_labels():
     global real_codes
     real_codes = codes
     global dictionary_of_codes
-    dictionary_of_codes = {}
-    token_codes = [dictionary_of_codes[i] for i in codes if dictionary_of_codes.setdefault(i,len(dictionary_of_codes)+1)]             ##Create one_hot vector
+    dictionary_of_codes_reverse = {}
+    token_codes = [dictionary_of_codes_reverse[i] for i in codes if dictionary_of_codes_reverse.setdefault(i,len(dictionary_of_codes_reverse)+1)]   ##Create one_hot vector
+    dictionary_of_codes = dict((v,k) for k,v in dictionary_of_codes_reverse.iteritems())
     token_codes_vector = np.eye(196)[token_codes]
     y = token_codes_vector
     return [x_text, y, real_codes, dictionary_of_codes]
