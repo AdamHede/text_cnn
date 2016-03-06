@@ -148,10 +148,6 @@ with tf.Graph().as_default():
                 [global_step, dev_summary_op, cnn.loss, cnn.accuracy],
                 feed_dict)
             time_str = datetime.datetime.now().isoformat()
-            ##classification = sess.run(cnn.predictions, feed_dict)
-            ##print classification
-            ##file_out = zip(x_batch, y_batch, classification)
-            ##data_helpers.write_predictions(file_out)
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:
                 writer.add_summary(summaries, step)

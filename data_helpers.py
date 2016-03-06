@@ -3,11 +3,70 @@ import re
 import itertools
 from collections import Counter
 import csv
+import pandas as pd
+from string import punctuation
+numbers = [0, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem.snowball import SnowballStemmer
 
 def write_predictions(output):
     with open("predictions.csv", 'w') as f:
         writer = csv.writer(f)                  ##Somehow remove linebreaks?! Split array up?
         writer.writerows(output)
+
+
+
+def split_master_data_into_seperate_files():
+    """
+    Takes the original datafile and uses Pandas to save it to seperate csvs for easier
+    handling and clearning in later steps.
+    """
+    data = pd.read_csv('./data/agendas_data.csv')
+    data.content_coding.to_csv('./data/content_coding.csv', index=False)
+    data.id.to_csv('./data/id.csv', index=False)
+    data.dataset.to_csv('./data/dataset.csv', index=False)
+    data.tekst.to_csv('./data/tekst.csv', index=False)
+    data.var1.to_csv('./data/var1.csv', index=False)
+    data.var3.to_csv('./data/var3.csv', index=False)
+    data.var4.to_csv('./data/var4.csv', index=False)
+    data.var5.to_csv('./data/var5.csv', index=False)
+    data.var6.to_csv('./data/var6.csv', index=False)
+    data.var7.to_csv('./data/var7.csv', index=False)
+
+def text_cleaner_and_tokenizer(texts):
+    """
+    takes a list of sentences, removes punctuation, numbers, stopwords and stems.
+    Then joins everything back together and returns the filtered texts as a list of unicode strings
+    :param texts: list of unprocessed strings
+    :return: list of unicode strings
+    """
+    i = 0
+    stopword_list = set(stopwords.words('danish'))
+    stemmer = SnowballStemmer("danish", ignore_stopwords=False)
+    filtered_texts = []
+
+    for sentence in texts:
+        for symbol in punctuation:
+            sentence = sentence.replace(symbol,'')
+        for num in numbers:
+            sentence = sentence.replace(str(num),'')
+        sentence = sentence.decode('utf-8').lower()
+        words_in_sentence = word_tokenize(sentence, language='danish')
+        filtered_sentence = []
+        for word in words_in_sentence:
+            if word not in stopword_list:
+                stem_word = stemmer.stem(word)
+                filtered_sentence.append(stem_word)
+
+        sentence = ' '.join(filtered_sentence)
+        filtered_texts.append(sentence)
+
+        i = i +1
+        if i % 1000 == 0:
+            print(i)
+    print('Done :D!')
+    return filtered_texts
 
 def clean_str(string):
     """
