@@ -41,6 +41,13 @@ print("")
 
 # Load data
 print("Loading data...")
+
+# Costum load data:
+id_file = open('./data/id.csv').read()        ## Loads IDs
+ids = id_file.splitlines()
+
+print('yay')
+
 x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes = data_helpers.load_data()
 # Randomly shuffle data
 np.random.seed(10)
@@ -169,7 +176,7 @@ with tf.Graph().as_default():
             predicted_codes = []
             for prediction in classification:
                 predicted_codes.append(dictionary_of_codes[prediction])
-            file_out = zip(real_codes, predicted_codes)
+            file_out = zip(ids, real_codes, predicted_codes)
             data_helpers.write_predictions(file_out)
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:

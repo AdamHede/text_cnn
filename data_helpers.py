@@ -92,10 +92,10 @@ def load_data_and_labels():
     """
     Costum load routine :D
     """
-    texts = list(open('tekst_out2.csv').readlines())
+    texts = list(open('./data/tekst.csv').readlines())
     texts = [s.strip() for s in texts]
     x_text = texts
-    codes = list(open('code_out2.csv').readlines())
+    codes = list(open('./data/content_coding.csv').readlines())
     codes = [s.strip() for s in codes]
     global real_codes
     real_codes = codes
