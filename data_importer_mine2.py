@@ -10,17 +10,6 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 
-def write_predictions(output):
-    with open("predictions.csv", 'w') as f:
-        writer = csv.writer(f)
-        sentences = [x[0] for x in output]                      ##Open up sentences
-        sentences = [a.replace('\n', '') for a in sentences]    ##Strips out linebreak
-        codes = [b[1] for b in output]                          ##Open up codes in similar format
-        results = zip(sentences, codes)                         ##Zip it up! Ready to write
-        writer.writerows(results)
-
-
-
 def split_master_data_into_seperate_files():
     """
     Takes the original datafile and uses Pandas to save it to seperate csvs for easier
@@ -37,6 +26,46 @@ def split_master_data_into_seperate_files():
     data.var5.to_csv('./data/var5.csv', index=False)
     data.var6.to_csv('./data/var6.csv', index=False)
     data.var7.to_csv('./data/var7.csv', index=False)
+
+def clean_str(string):
+    """
+    Tokenization/string cleaning for all datasets except for SST.
+    Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+    """
+    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
+    string = re.sub(r"\'s", " \'s", string)
+    string = re.sub(r"\'ve", " \'ve", string)
+    string = re.sub(r"n\'t", " n\'t", string)
+    string = re.sub(r"\'re", " \'re", string)
+    string = re.sub(r"\'d", " \'d", string)
+    string = re.sub(r"\'ll", " \'ll", string)
+    string = re.sub(r",", " , ", string)
+    string = re.sub(r"!", " ! ", string)
+    string = re.sub(r"\(", " \( ", string)
+    string = re.sub(r"\)", " \) ", string)
+    string = re.sub(r"\?", " \? ", string)
+    string = re.sub(r"\s{2,}", " ", string)
+    return string.strip().lower()
+
+def load_data_and_labels():
+    """
+    Costum load routine :D
+    """
+    texts = list(open('./data/tekst.csv').readlines())
+    texts = [clean_str(sentence) for sentence in texts]
+    texts = [s.strip() for s in texts]
+    x_text = texts
+    codes = list(open('./data/var4.csv').readlines())
+    codes = [s.strip() for s in codes]
+    global real_codes
+    real_codes = codes
+    global dictionary_of_codes
+    dictionary_of_codes_reverse = {}
+    token_codes = [dictionary_of_codes_reverse[i] for i in codes if dictionary_of_codes_reverse.setdefault(i,len(dictionary_of_codes_reverse)+1)]   ##Create one_hot vector
+    dictionary_of_codes = dict((v,k) for k,v in dictionary_of_codes_reverse.iteritems())
+    token_codes_vector = np.eye(5)[token_codes]
+    y = token_codes_vector
+    return [x_text, y, real_codes, dictionary_of_codes]
 
 def text_cleaner_and_tokenizer(texts):
     """
@@ -72,68 +101,6 @@ def text_cleaner_and_tokenizer(texts):
     print('Done :D!')
     return filtered_texts
 
-def clean_str(string):
-    """
-    Tokenization/string cleaning for all datasets except for SST.
-    Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
-    """
-    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
-    string = re.sub(r"\'s", " \'s", string)
-    string = re.sub(r"\'ve", " \'ve", string)
-    string = re.sub(r"n\'t", " n\'t", string)
-    string = re.sub(r"\'re", " \'re", string)
-    string = re.sub(r"\'d", " \'d", string)
-    string = re.sub(r"\'ll", " \'ll", string)
-    string = re.sub(r",", " , ", string)
-    string = re.sub(r"!", " ! ", string)
-    string = re.sub(r"\(", " \( ", string)
-    string = re.sub(r"\)", " \) ", string)
-    string = re.sub(r"\?", " \? ", string)
-    string = re.sub(r"\s{2,}", " ", string)
-    return string.strip().lower()
-
-def load_data_and_labels():
-    """
-    Costum load routine :D
-    """
-    texts = list(open('./data/tekst.csv').readlines())
-    texts = [s.strip() for s in texts]
-    x_text = texts
-    codes = list(open('./data/content_coding.csv').readlines())
-    codes = [s.strip() for s in codes]
-    global real_codes
-    real_codes = codes
-    global dictionary_of_codes
-    dictionary_of_codes_reverse = {}
-    token_codes = [dictionary_of_codes_reverse[i] for i in codes if dictionary_of_codes_reverse.setdefault(i,len(dictionary_of_codes_reverse)+1)]   ##Create one_hot vector
-    dictionary_of_codes = dict((v,k) for k,v in dictionary_of_codes_reverse.iteritems())
-    token_codes_vector = np.eye(196)[token_codes]
-    y = token_codes_vector
-    return [x_text, y, real_codes, dictionary_of_codes]
-
-
-
-def THEIR_load_data_and_labels():
-    """
-    Loads MR polarity data from files, splits the data into words and generates labels.
-    Returns split sentences and labels.
-    """
-    # Load data from files
-    positive_examples = list(open("./data/rt-polaritydata/rt-polarity.pos").readlines())
-    positive_examples = [s.strip() for s in positive_examples]
-    negative_examples = list(open("./data/rt-polaritydata/rt-polarity.neg").readlines())
-    negative_examples = [s.strip() for s in negative_examples]
-    # Split by words
-    x_text = positive_examples + negative_examples
-    x_text = [clean_str(sent) for sent in x_text]
-    x_text = [s.split(" ") for s in x_text]
-    # Generate labels
-    positive_labels = [[0, 1] for _ in positive_examples]
-    negative_labels = [[1, 0] for _ in negative_examples]
-    y = np.concatenate([positive_labels, negative_labels], 0)
-    return [x_text, y]
-
-
 def pad_sentences(sentences, padding_word="<PAD/>"):
     """
     Pads all sentences to the same length. The length is defined by the longest sentence.
@@ -154,7 +121,6 @@ def pad_sentences(sentences, padding_word="<PAD/>"):
             print('Padding sentence: ' + str(i))
     return padded_sentences
 
-
 def build_vocab(sentences):
     """
     Builds a vocabulary mapping from word to index based on the sentences.
@@ -170,7 +136,6 @@ def build_vocab(sentences):
     print("Vocabulary done!")
     return [vocabulary, vocabulary_inv]
 
-
 def build_input_data(sentences, labels, vocabulary):
     """
     Maps sentencs and labels to vectors based on a vocabulary.
@@ -178,7 +143,6 @@ def build_input_data(sentences, labels, vocabulary):
     x = np.array([[vocabulary[word] for word in sentence] for sentence in sentences])      ##Might be useful if I ever need to revert back to sentences
     y = np.array(labels)
     return [x, y]
-
 
 def load_data():
     """
@@ -190,8 +154,8 @@ def load_data():
     sentences_padded = pad_sentences(sentences)                                     ##Runs padding
     vocabulary, vocabulary_inv = build_vocab(sentences_padded)                      ##Builds vocabulary
     x, y = build_input_data(sentences_padded, labels, vocabulary)                   ##Constructs the array
-    return [x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
-
+    id = list(open('./data/id.csv').readlines())
+    return [id, x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
 
 def batch_iter(data, batch_size, num_epochs):
     """
@@ -210,3 +174,7 @@ def batch_iter(data, batch_size, num_epochs):
             one_batch = shuffled_data[start_index:end_index]
             yield shuffled_data[start_index:end_index]            ##Fixed af classes
             ##print('Batch done!')
+
+##id, x, y, vocab, inv_vocab, real_codes, dic_of_codes = load_data()
+
+print("YAY! and stop")
