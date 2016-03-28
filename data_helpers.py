@@ -13,10 +13,11 @@ from nltk.stem.snowball import SnowballStemmer
 def write_predictions(output):
     with open("predictions.csv", 'w') as f:
         writer = csv.writer(f)
-        sentences = [x[0] for x in output]                      ##Open up sentences
-        sentences = [a.replace('\n', '') for a in sentences]    ##Strips out linebreak
-        codes = [b[1] for b in output]                          ##Open up codes in similar format
-        results = zip(sentences, codes)                         ##Zip it up! Ready to write
+        ids = [x[0] for x in output]                      ##Open up sentences
+        ids = [a.replace('\n', '') for a in ids]    ##Strips out linebreak
+        real_codes = [b[1] for b in output]                     ##Open up real_codes in similar format
+        pred_codes = [c[2] for c in output]
+        results = zip(ids, real_codes, pred_codes)                         ##Zip it up! Ready to write
         writer.writerows(results)
 
 
@@ -187,9 +188,9 @@ def load_data():
     """
     # Load and preprocess data
     sentences, labels, real_codes, dictionary_of_codes = load_data_and_labels()                                      ##Actual loading of data
-    sentences_padded = pad_sentences(sentences)                                     ##Runs padding
-    vocabulary, vocabulary_inv = build_vocab(sentences_padded)                      ##Builds vocabulary
-    x, y = build_input_data(sentences_padded, labels, vocabulary)                   ##Constructs the array
+    sentences_padded = pad_sentences(sentences)                                     ## Runs padding
+    vocabulary, vocabulary_inv = build_vocab(sentences_padded)                      ## Builds vocabulary
+    x, y = build_input_data(sentences_padded, labels, vocabulary)                   ## Constructs the array
     return [x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
 
 

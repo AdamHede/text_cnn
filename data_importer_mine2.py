@@ -49,9 +49,30 @@ def clean_str(string):
 
 def load_data_and_labels():
     """
-    Costum load routine :D
+    Custom load routine :D
     """
     texts = list(open('./data/tekst.csv').readlines())
+    texts = [clean_str(sentence) for sentence in texts]
+    texts = [s.strip() for s in texts]
+    x_text = texts
+    codes = list(open('./data/var4.csv').readlines())
+    codes = [s.strip() for s in codes]
+    global real_codes
+    real_codes = codes
+    global dictionary_of_codes
+    dictionary_of_codes_reverse = {}
+    token_codes = [dictionary_of_codes_reverse[i] for i in codes if dictionary_of_codes_reverse.setdefault(i,len(dictionary_of_codes_reverse)+1)]   ##Create one_hot vector
+    dictionary_of_codes = dict((v,k) for k,v in dictionary_of_codes_reverse.iteritems())
+    token_codes_vector = np.eye(5)[token_codes]
+    y = token_codes_vector
+    return [x_text, y, real_codes, dictionary_of_codes]
+
+def quick_load_data_and_labels():
+    """
+    Custom load routine :D
+    Loads from already stemmed & padded sentences
+    """
+    texts = list(open('./data/preprocessed_text.csv').readlines())
     texts = [clean_str(sentence) for sentence in texts]
     texts = [s.strip() for s in texts]
     x_text = texts
@@ -80,8 +101,10 @@ def text_cleaner_and_tokenizer(texts):
     filtered_texts = []
 
     for sentence in texts:
+        """
         for symbol in punctuation:
             sentence = sentence.replace(symbol,'')
+        """
         for num in numbers:
             sentence = sentence.replace(str(num),'')
         sentence = sentence.decode('utf-8').lower()
@@ -116,6 +139,7 @@ def pad_sentences(sentences, padding_word="<PAD/>"):
         for j in range(num_padding):                            ##ADAM: Proper padding
             sentence.append(' <P> ')
         ##new_sentence = sentence + [padding_word] * num_padding
+        sentence = ' '.join(sentence)
         padded_sentences.append(sentence)
         if i % 1000 == 0:                                       ##ADAM: See what is printed :D
             print('Padding sentence: ' + str(i))
@@ -151,9 +175,31 @@ def load_data():
     """
     # Load and preprocess data
     sentences, labels, real_codes, dictionary_of_codes = load_data_and_labels()                                      ##Actual loading of data
-    sentences_padded = pad_sentences(sentences)                                     ##Runs padding
+    sentences_stemmed = text_cleaner_and_tokenizer(sentences)
+    sentences_padded = pad_sentences(sentences_stemmed)                                     ##Runs padding
+    sentences_padded = [a.split() for a in sentences_padded]                        ## Transforms padded sentences back into list of list of words. Needed for efficient vocab building
     vocabulary, vocabulary_inv = build_vocab(sentences_padded)                      ##Builds vocabulary
     x, y = build_input_data(sentences_padded, labels, vocabulary)                   ##Constructs the array
+    id = list(open('./data/id.csv').readlines())
+
+    with open('./data/preprocessed_text.csv', 'w') as file:
+        sentences_padded = [' '.join(a) for a in sentences_padded]
+        file.write('\n'.join(sentences_padded))
+        print("Updated preprocessed texts!")
+    return [id, x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
+
+def quick_load_data():
+    """
+    Loads pre-padded and stemmed sentences to save time
+
+    """
+    sentences, labels, real_codes, dictionary_of_codes = quick_load_data_and_labels()                                      ##Actual loading of data
+    ##sentences_stemmed = text_cleaner_and_tokenizer(sentences)
+    ##sentences_padded = pad_sentences(sentences_stemmed)                                     ##Runs padding
+    sentences = [a.split() for a in sentences]                        ## Transforms padded sentences back into list of list of words. Needed for efficient vocab building
+    vocabulary, vocabulary_inv = build_vocab(sentences)                      ##Builds vocabulary
+    x, y = build_input_data(sentences, labels, vocabulary)                   ##Constructs the array
+    print("Successfully loaded preprocessed data")
     id = list(open('./data/id.csv').readlines())
     return [id, x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
 
