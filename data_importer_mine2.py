@@ -213,24 +213,53 @@ def quick_load_data():
     id = list(open('./data/id.csv').readlines())
     return [id, x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
 
-def delete_missing_rows(dataset):
+def get_non_missing(ids, x, y, real_codes):
+    """
+    Takes lists of the data and removes missing data!
+    :param ids:
+    :param x:
+    :param y:
+    :param real_codes:
+    :return:
+    """
+    dataset = zip(ids, x, y, real_codes)
+    dataset = np.array(dataset, dtype=object)
+    non_miss = dataset[~(dataset[:,3] == '""')]
 
-    npdataset = np.ndarray(dataset, dtype=object)
+    id_clean = non_miss[:,0].tolist()           ##Takes first column of non_missing matrix to writes it to a list
+    text_clean = non_miss[:,1]
+    code_clean = non_miss[:,2]
+    real_codes_clean = non_miss[:,3].tolist()
 
-    non_missing_dataset = npdataset[np.where(npdataset[:,2 != np.array[0,0,0,1,0]])]
+    text_clean = np.stack(text_clean, axis=0)   ## Makes everything a 2D array instead of array of arrays...
+    code_clean = np.stack(code_clean, axis=0)
 
-    #pddataset = pd.DataFrame(dataset, columns=['ids', 'sentences', 'codes'])
-    print("Hi!")
-    #non_missing_dataset = pddataset[pddataset.codes != [0,0,0,1,0]]
-    #missing_dataset = pddataset[pddataset.codes == [0,0,0,1,0]]
+    return [id_clean, text_clean, code_clean, real_codes_clean]
 
-    #non_missing_dataset = dataset[np.all(dataset != [0,0,0,1,0])]
-    #missing_dataset = dataset[np.logical_not(dataset != [0,0,0,1,0])]
+def get_missing(ids, x, y, real_codes):
+    """
+    Takes lists of the data, and returns the lists with only missing data
+    Useful for serious prediction work!
+    :param ids:
+    :param x:
+    :param y:
+    :param real_codes:
+    :return:
+    """
+    dataset = zip(ids, x, y, real_codes)
+    dataset = np.array(dataset, dtype=object)
+    miss = dataset[~(dataset[:,3] != '""')]
 
-    #delete_non_missing_dataset = np.delete(dataset, [0,0,0,1,0], axis=1)
+    id_miss = miss[:,0].tolist()
+    text_miss = miss[:,1]
+    code_miss = miss[:,2]
+    real_codes_miss = miss[:,3].tolist()
 
+    text_clean = np.stack(text_clean, axis=0)
+    code_clean = np.stack(code_clean, axis=0)
 
-    return [non_missing_dataset, missing_dataset, pddataset]
+    return [id_miss, text_miss, code_miss, real_codes_miss]
+
 
 def batch_iter(data, batch_size, num_epochs):
     """
