@@ -53,7 +53,9 @@ def load_data_and_labels():
     """
     texts = list(open('./data/tekst.csv').readlines())
     texts = [clean_str(sentence) for sentence in texts]
+    print("removed punctuation")
     texts = [s.strip() for s in texts]
+    print("")
     x_text = texts
     codes = list(open('./data/var4.csv').readlines())
     codes = [s.strip() for s in codes]
@@ -73,18 +75,24 @@ def quick_load_data_and_labels():
     Loads from already stemmed & padded sentences
     """
     texts = list(open('./data/preprocessed_text.csv').readlines())
-    texts = [clean_str(sentence) for sentence in texts]
+    print("read text file")
+    #texts = [clean_str(sentence) for sentence in texts]
     texts = [s.strip() for s in texts]
+    print("stripping texts")
     x_text = texts
     codes = list(open('./data/var4.csv').readlines())
+    print("Read codes files")
     codes = [s.strip() for s in codes]
     global real_codes
     real_codes = codes
     global dictionary_of_codes
+    print("Reading files done!")
     dictionary_of_codes_reverse = {}
     token_codes = [dictionary_of_codes_reverse[i] for i in codes if dictionary_of_codes_reverse.setdefault(i,len(dictionary_of_codes_reverse)+1)]   ##Create one_hot vector
+    print("token_codes created!")
     dictionary_of_codes = dict((v,k) for k,v in dictionary_of_codes_reverse.iteritems())
     token_codes_vector = np.eye(5)[token_codes]
+    print("Created one_hot vectors")
     y = token_codes_vector
     return [x_text, y, real_codes, dictionary_of_codes]
 
@@ -196,12 +204,33 @@ def quick_load_data():
     sentences, labels, real_codes, dictionary_of_codes = quick_load_data_and_labels()                                      ##Actual loading of data
     ##sentences_stemmed = text_cleaner_and_tokenizer(sentences)
     ##sentences_padded = pad_sentences(sentences_stemmed)                                     ##Runs padding
+    print("Successfully loaded preprocessed data")
     sentences = [a.split() for a in sentences]                        ## Transforms padded sentences back into list of list of words. Needed for efficient vocab building
+    print("Split padding done!")
     vocabulary, vocabulary_inv = build_vocab(sentences)                      ##Builds vocabulary
     x, y = build_input_data(sentences, labels, vocabulary)                   ##Constructs the array
-    print("Successfully loaded preprocessed data")
+
     id = list(open('./data/id.csv').readlines())
     return [id, x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
+
+def delete_missing_rows(dataset):
+
+    npdataset = np.ndarray(dataset, dtype=object)
+
+    non_missing_dataset = npdataset[np.where(npdataset[:,2 != np.array[0,0,0,1,0]])]
+
+    #pddataset = pd.DataFrame(dataset, columns=['ids', 'sentences', 'codes'])
+    print("Hi!")
+    #non_missing_dataset = pddataset[pddataset.codes != [0,0,0,1,0]]
+    #missing_dataset = pddataset[pddataset.codes == [0,0,0,1,0]]
+
+    #non_missing_dataset = dataset[np.all(dataset != [0,0,0,1,0])]
+    #missing_dataset = dataset[np.logical_not(dataset != [0,0,0,1,0])]
+
+    #delete_non_missing_dataset = np.delete(dataset, [0,0,0,1,0], axis=1)
+
+
+    return [non_missing_dataset, missing_dataset, pddataset]
 
 def batch_iter(data, batch_size, num_epochs):
     """
