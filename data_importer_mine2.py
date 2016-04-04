@@ -231,7 +231,8 @@ def get_non_missing(ids, x, y, real_codes):
     text_clean = non_miss[:,1]
     code_clean = non_miss[:,2]
     real_codes_clean = non_miss[:,3].tolist()
-    real_codes_clean = [float(i) for i in real_codes_clean]
+    real_codes_clean = [float(i) for i in real_codes_clean]    ##Turns real_codes into floats for memory efficiency
+    real_codes_clean = np.array(real_codes_clean)
 
     text_clean = np.stack(text_clean, axis=0)   ## Makes everything a 2D array instead of array of arrays...
     code_clean = np.stack(code_clean, axis=0)
@@ -267,20 +268,22 @@ def batch_iter(data, batch_size, num_epochs):
     """
     Generates a batch iterator for a dataset.
     FOR THE BINARY CASE!!!
+    Balances the batches by drawing a limitd random sample of 0-cases matching the number of 1-cases
+    Means I train on all 1-cases each epoch, and a limited number of 0-cases.
     """
     data = np.array(data)
 
-    data1 = data[~(data[:,2] == 1.0)]           ## Uses real_codes to split into types.
+    data1 = data[~(data[:,2] == 1.0)]           ## Uses real_codes to split into 1-cases and 0-cases.
     data0 = data[~(data[:,2] == 0.0)]
 
     sample_size = len(data1)
     data0random_sample = data0[np.random.randint(data0.shape[0],size=sample_size)]  ## Samples random 0-cases
-    data = np.vstack((data1, data0random_sample))
-    data = np.delete(data, 2, axis=1)
+    data = np.vstack((data1, data0random_sample))       ## Combines 1-cases with 0-cases sample
+    data = np.delete(data, 2, axis=1)                   ## Removes real_codes column
     np.random.shuffle(data)
-    data_size = len(data)
+    data_size = len(data)                               ## Now we have a new (balanced) dataset!! :D
 
-    num_batches_per_epoch = int(len(data)/batch_size) + 1              ##Uses full positive case set only
+    num_batches_per_epoch = int(len(data)/batch_size) + 1              ## Untouched... I think.
     for epoch in range(num_epochs):
         # Shuffle the data at each epoch
         shuffle_indices = np.random.permutation(np.arange(data_size))
