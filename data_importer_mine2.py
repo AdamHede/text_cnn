@@ -65,7 +65,7 @@ def load_data_and_labels():
     dictionary_of_codes_reverse = {}
     token_codes = [dictionary_of_codes_reverse[i] for i in codes if dictionary_of_codes_reverse.setdefault(i,len(dictionary_of_codes_reverse)+1)]   ##Create one_hot vector
     dictionary_of_codes = dict((v,k) for k,v in dictionary_of_codes_reverse.iteritems())
-    token_codes_vector = np.eye(5)[token_codes]
+    token_codes_vector = np.eye(5)[token_codes].tolist()
     y = token_codes_vector
     return [x_text, y, real_codes, dictionary_of_codes]
 
@@ -82,7 +82,7 @@ def quick_load_data_and_labels():
     x_text = texts
     codes = list(open('./data/var4.csv').readlines())
     print("Read codes files")
-    codes = [s.strip() for s in codes]
+    codes = [s.strip()for s in codes]
     global real_codes
     real_codes = codes
     global dictionary_of_codes
@@ -91,7 +91,7 @@ def quick_load_data_and_labels():
     token_codes = [dictionary_of_codes_reverse[i] for i in codes if dictionary_of_codes_reverse.setdefault(i,len(dictionary_of_codes_reverse)+1)]   ##Create one_hot vector
     print("token_codes created!")
     dictionary_of_codes = dict((v,k) for k,v in dictionary_of_codes_reverse.iteritems())
-    token_codes_vector = np.eye(5)[token_codes]
+    token_codes_vector = np.eye(5, dtype=np.int16)[token_codes].tolist()
     print("Created one_hot vectors")
     y = token_codes_vector
     return [x_text, y, real_codes, dictionary_of_codes]
@@ -222,6 +222,7 @@ def get_non_missing(ids, x, y, real_codes):
     :param real_codes:
     :return:
     """
+
     dataset = zip(ids, x, y, real_codes)
     dataset = np.array(dataset, dtype=object)
     non_miss = dataset[~(dataset[:,3] == '""')]
@@ -230,6 +231,7 @@ def get_non_missing(ids, x, y, real_codes):
     text_clean = non_miss[:,1]
     code_clean = non_miss[:,2]
     real_codes_clean = non_miss[:,3].tolist()
+    real_codes_clean = [float(i) for i in real_codes_clean]
 
     text_clean = np.stack(text_clean, axis=0)   ## Makes everything a 2D array instead of array of arrays...
     code_clean = np.stack(code_clean, axis=0)
@@ -264,10 +266,21 @@ def get_missing(ids, x, y, real_codes):
 def batch_iter(data, batch_size, num_epochs):
     """
     Generates a batch iterator for a dataset.
+    FOR THE BINARY CASE!!!
     """
     data = np.array(data)
+
+    data1 = data[~(data[:,2] == 1.0)]           ## Uses real_codes to split into types.
+    data0 = data[~(data[:,2] == 0.0)]
+
+    sample_size = len(data1)
+    data0random_sample = data0[np.random.randint(data0.shape[0],size=sample_size)]  ## Samples random 0-cases
+    data = np.vstack((data1, data0random_sample))
+    data = np.delete(data, 2, axis=1)
+    np.random.shuffle(data)
     data_size = len(data)
-    num_batches_per_epoch = int(len(data)/batch_size) + 1
+
+    num_batches_per_epoch = int(len(data)/batch_size) + 1              ##Uses full positive case set only
     for epoch in range(num_epochs):
         # Shuffle the data at each epoch
         shuffle_indices = np.random.permutation(np.arange(data_size))
