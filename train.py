@@ -49,6 +49,8 @@ ids = id_file.splitlines()
 print('yay')
 
 x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes = data_helpers.load_data()
+
+
 # Randomly shuffle data
 np.random.seed(10)
 shuffle_indices = np.random.permutation(np.arange(len(y)))

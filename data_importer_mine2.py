@@ -57,7 +57,7 @@ def load_data_and_labels():
     texts = [s.strip() for s in texts]
     print("")
     x_text = texts
-    codes = list(open('./data/var4.csv').readlines())
+    codes = list(open('./data/var7.csv').readlines())
     codes = [s.strip() for s in codes]
     global real_codes
     real_codes = codes
@@ -193,7 +193,7 @@ def load_data():
     with open('./data/preprocessed_text.csv', 'w') as file:
         sentences_padded = [' '.join(a) for a in sentences_padded]
         file.write('\n'.join(sentences_padded))
-        print("Updated preprocessed texts!")
+        print("Updated preprocessed texts :D!")
     return [id, x, y, vocabulary, vocabulary_inv, real_codes, dictionary_of_codes]
 
 def quick_load_data():

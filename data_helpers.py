@@ -25,7 +25,7 @@ def write_predictions(output):
 def split_master_data_into_seperate_files():
     """
     Takes the original datafile and uses Pandas to save it to seperate csvs for easier
-    handling and clearning in later steps.
+    handling and cleaning in later steps.
     """
     data = pd.read_csv('./data/agendas_data.csv')
     data.content_coding.to_csv('./data/content_coding.csv', index=False)
