@@ -57,7 +57,7 @@ def load_data_and_labels():
     texts = [s.strip() for s in texts]
     print("")
     x_text = texts
-    codes = list(open('./data/var4.csv').readlines())
+    codes = list(open('./data/var5.csv').readlines())
     codes = [s.strip() for s in codes]
     global real_codes
     real_codes = codes
