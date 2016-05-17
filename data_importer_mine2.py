@@ -10,6 +10,16 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 
+def write_predictions(output):
+    with open("predictions.csv", 'w') as f:
+        writer = csv.writer(f)
+        ids = [x[0] for x in output]                      ##Open up sentences
+        ids = [a.replace('\n', '') for a in ids]    ##Strips out linebreak
+        real_codes = [b[1] for b in output]                     ##Open up real_codes in similar format
+        pred_codes = [c[2] for c in output]
+        results = zip(ids, real_codes, pred_codes)                         ##Zip it up! Ready to write
+        writer.writerows(results)
+
 def split_master_data_into_seperate_files():
     """
     Takes the original datafile and uses Pandas to save it to seperate csvs for easier
@@ -57,7 +67,7 @@ def load_data_and_labels():
     texts = [s.strip() for s in texts]
     print("")
     x_text = texts
-    codes = list(open('./data/var5.csv').readlines())
+    codes = list(open('./data/var6.csv').readlines())
     codes = [s.strip() for s in codes]
     global real_codes
     real_codes = codes
@@ -80,7 +90,7 @@ def quick_load_data_and_labels():
     texts = [s.strip() for s in texts]
     print("stripping texts")
     x_text = texts
-    codes = list(open('./data/var4.csv').readlines())
+    codes = list(open('./data/var6.csv').readlines())
     print("Read codes files")
     codes = [s.strip()for s in codes]
     global real_codes

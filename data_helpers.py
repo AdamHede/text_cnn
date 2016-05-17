@@ -20,8 +20,6 @@ def write_predictions(output):
         results = zip(ids, real_codes, pred_codes)                         ##Zip it up! Ready to write
         writer.writerows(results)
 
-
-
 def split_master_data_into_seperate_files():
     """
     Takes the original datafile and uses Pandas to save it to seperate csvs for easier

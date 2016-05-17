@@ -14,6 +14,16 @@ sys.setdefaultencoding('utf-8')
 stemmer = SnowballStemmer("danish")
 
 
+def write_predictions(output):
+    with open("predictions.csv", 'w') as f:
+        writer = csv.writer(f)
+        ids = [x[0] for x in output]                      ##Open up sentences
+        ids = [a.replace('\n', '') for a in ids]    ##Strips out linebreak
+        real_codes = [b[1] for b in output]                     ##Open up real_codes in similar format
+        pred_codes = [c[2] for c in output]
+        results = zip(ids, real_codes, pred_codes)                         ##Zip it up! Ready to write
+        writer.writerows(results)
+
 with open('master_data.csv', 'r') as r, open('tekst_out2.csv', 'w') as text_out, open('code_out2.csv', 'w') as code_out:
     reader = csv.reader(r)
     text_writer = csv.writer(text_out, delimiter=b',')
