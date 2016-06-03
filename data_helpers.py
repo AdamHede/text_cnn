@@ -11,13 +11,18 @@ from nltk.tokenize import word_tokenize
 from nltk.stem.snowball import SnowballStemmer
 
 def write_predictions(output):
+    """
+    Used to write predictions to file.
+    :param output: Predictions given by the neural network
+    :return: Writes to file.
+    """
     with open("predictions.csv", 'w') as f:
         writer = csv.writer(f)
         ids = [x[0] for x in output]                      ##Open up sentences
-        ids = [a.replace('\n', '') for a in ids]    ##Strips out linebreak
-        real_codes = [b[1] for b in output]                     ##Open up real_codes in similar format
+        ids = [a.replace('\n', '') for a in ids]          ##Strips out linebreak
+        real_codes = [b[1] for b in output]               ##Open up real_codes in similar format
         pred_codes = [c[2] for c in output]
-        results = zip(ids, real_codes, pred_codes)                         ##Zip it up! Ready to write
+        results = zip(ids, real_codes, pred_codes)        ##Zip it up! Ready to write
         writer.writerows(results)
 
 def split_master_data_into_seperate_files():
@@ -93,7 +98,8 @@ def clean_str(string):
 
 def load_data_and_labels():
     """
-    Costum load routine :D
+    Loads sentences and content coding. Notice, this function loads specifically content codes.
+    Right now used in train.py (non-binary)
     """
     texts = list(open('./data/tekst.csv').readlines())
     texts = [s.strip() for s in texts]
@@ -109,29 +115,6 @@ def load_data_and_labels():
     token_codes_vector = np.eye(196)[token_codes]
     y = token_codes_vector
     return [x_text, y, real_codes, dictionary_of_codes]
-
-
-
-def THEIR_load_data_and_labels():
-    """
-    Loads MR polarity data from files, splits the data into words and generates labels.
-    Returns split sentences and labels.
-    """
-    # Load data from files
-    positive_examples = list(open("./data/rt-polaritydata/rt-polarity.pos").readlines())
-    positive_examples = [s.strip() for s in positive_examples]
-    negative_examples = list(open("./data/rt-polaritydata/rt-polarity.neg").readlines())
-    negative_examples = [s.strip() for s in negative_examples]
-    # Split by words
-    x_text = positive_examples + negative_examples
-    x_text = [clean_str(sent) for sent in x_text]
-    x_text = [s.split(" ") for s in x_text]
-    # Generate labels
-    positive_labels = [[0, 1] for _ in positive_examples]
-    negative_labels = [[1, 0] for _ in negative_examples]
-    y = np.concatenate([positive_labels, negative_labels], 0)
-    return [x_text, y]
-
 
 def pad_sentences(sentences, padding_word="<PAD/>"):
     """

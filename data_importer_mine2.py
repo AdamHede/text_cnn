@@ -4,7 +4,6 @@ import itertools
 from collections import Counter
 import csv
 import pandas as pd
-from string import punctuation
 numbers = [0, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -14,10 +13,10 @@ def write_predictions(output):
     with open("predictions.csv", 'w') as f:
         writer = csv.writer(f)
         ids = [x[0] for x in output]                      ##Open up sentences
-        ids = [a.replace('\n', '') for a in ids]    ##Strips out linebreak
-        real_codes = [b[1] for b in output]                     ##Open up real_codes in similar format
+        ids = [a.replace('\n', '') for a in ids]          ##Strips out linebreak
+        real_codes = [b[1] for b in output]               ##Open up real_codes in similar format
         pred_codes = [c[2] for c in output]
-        results = zip(ids, real_codes, pred_codes)                         ##Zip it up! Ready to write
+        results = zip(ids, real_codes, pred_codes)        ##Zip it up! Ready to write
         writer.writerows(results)
 
 def split_master_data_into_seperate_files():
@@ -59,7 +58,8 @@ def clean_str(string):
 
 def load_data_and_labels():
     """
-    Custom load routine :D
+    Generalized load function. Reads texts, cleans them and reads codes.
+    Right now used in train binary.py
     """
     texts = list(open('./data/tekst.csv').readlines())
     texts = [clean_str(sentence) for sentence in texts]
@@ -67,7 +67,7 @@ def load_data_and_labels():
     texts = [s.strip() for s in texts]
     print("")
     x_text = texts
-    codes = list(open('./data/var6.csv').readlines())
+    codes = list(open('./data/var1.csv').readlines())
     codes = [s.strip() for s in codes]
     global real_codes
     real_codes = codes
@@ -90,7 +90,7 @@ def quick_load_data_and_labels():
     texts = [s.strip() for s in texts]
     print("stripping texts")
     x_text = texts
-    codes = list(open('./data/var6.csv').readlines())
+    codes = list(open('./data/var1.csv').readlines())
     print("Read codes files")
     codes = [s.strip()for s in codes]
     global real_codes
@@ -142,7 +142,7 @@ def text_cleaner_and_tokenizer(texts):
     print('Done :D!')
     return filtered_texts
 
-def pad_sentences(sentences, padding_word="<PAD/>"):
+def pad_sentences(sentences):
     """
     Pads all sentences to the same length. The length is defined by the longest sentence.
     Returns padded sentences.
@@ -191,7 +191,6 @@ def load_data():
     Loads and preprocessed data for the MR dataset.
     Returns input vectors, labels, vocabulary, and inverse vocabulary.
     """
-    # Load and preprocess data
     sentences, labels, real_codes, dictionary_of_codes = load_data_and_labels()                                      ##Actual loading of data
     sentences_stemmed = text_cleaner_and_tokenizer(sentences)
     sentences_padded = pad_sentences(sentences_stemmed)                                     ##Runs padding
@@ -209,13 +208,10 @@ def load_data():
 def quick_load_data():
     """
     Loads pre-padded and stemmed sentences to save time
-
     """
-    sentences, labels, real_codes, dictionary_of_codes = quick_load_data_and_labels()                                      ##Actual loading of data
-    ##sentences_stemmed = text_cleaner_and_tokenizer(sentences)
-    ##sentences_padded = pad_sentences(sentences_stemmed)                                     ##Runs padding
+    sentences, labels, real_codes, dictionary_of_codes = quick_load_data_and_labels()   ##Actual loading of data
     print("Successfully loaded preprocessed data")
-    sentences = [a.split() for a in sentences]                        ## Transforms padded sentences back into list of list of words. Needed for efficient vocab building
+    sentences = [a.split() for a in sentences]                                ## Transforms padded sentences back into list of list of words. Needed for efficient vocab building
     print("Split padding done!")
     vocabulary, vocabulary_inv = build_vocab(sentences)                      ##Builds vocabulary
     x, y = build_input_data(sentences, labels, vocabulary)                   ##Constructs the array
@@ -268,9 +264,6 @@ def get_missing(ids, x, y, real_codes):
     code_miss = miss[:,2]
     real_codes_miss = miss[:,3].tolist()
 
-    text_clean = np.stack(text_clean, axis=0)
-    code_clean = np.stack(code_clean, axis=0)
-
     return [id_miss, text_miss, code_miss, real_codes_miss]
 
 
@@ -288,12 +281,12 @@ def batch_iter(data, batch_size, num_epochs):
 
     sample_size = len(data1)
     data0random_sample = data0[np.random.randint(data0.shape[0],size=sample_size)]  ## Samples random 0-cases
-    data = np.vstack((data1, data0random_sample))       ## Combines 1-cases with 0-cases sample
-    data = np.delete(data, 2, axis=1)                   ## Removes real_codes column
+    data = np.vstack((data1, data0random_sample))            ## Combines 1-cases with 0-cases sample
+    data = np.delete(data, 2, axis=1)                        ## Removes real_codes column
     np.random.shuffle(data)
-    data_size = len(data)                               ## Now we have a new (balanced) dataset!! :D
+    data_size = len(data)                                    ## Now we have a new (balanced) dataset!
 
-    num_batches_per_epoch = int(len(data)/batch_size) + 1              ## Untouched... I think.
+    num_batches_per_epoch = int(len(data)/batch_size) + 1
     for epoch in range(num_epochs):
         # Shuffle the data at each epoch
         shuffle_indices = np.random.permutation(np.arange(data_size))
@@ -302,9 +295,6 @@ def batch_iter(data, batch_size, num_epochs):
             start_index = batch_num * batch_size
             end_index = min((batch_num + 1) * batch_size, data_size)
             one_batch = shuffled_data[start_index:end_index]
-            yield shuffled_data[start_index:end_index]            ##Fixed af classes
-            ##print('Batch done!')
-
-##id, x, y, vocab, inv_vocab, real_codes, dic_of_codes = load_data()
+            yield shuffled_data[start_index:end_index]
 
 print("YAY! and stop")
