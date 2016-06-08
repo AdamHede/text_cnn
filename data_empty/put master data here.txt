@@ -1,0 +1,5 @@
+In this directory should the master file be placed, and renamed simply "data"
+the function load_data_and_labels() from data_importer_mine2.py will read from here
+It will then create several .csv files containing all columns and a preprocessed_text.csv file
+
+This file can be read using quick_load_data_and_labels() later.
